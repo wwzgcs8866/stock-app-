@@ -9,6 +9,7 @@ body{font-family:sans-serif;background:#f4f6f8;margin:0;padding:15px}
 h1{text-align:center}
 input,select,button{width:100%;padding:10px;margin:5px 0}
 .card{background:#fff;padding:10px;border-radius:8px;margin-top:10px}
+img{max-width:100%;border-radius:6px;margin-top:5px}
 small{color:red}
 </style>
 </head>
@@ -16,16 +17,20 @@ small{color:red}
 
 <h1>📦 ระบบสต๊อคสินค้า</h1>
 
+<input id="search" placeholder="🔍 ค้นหาสินค้า" oninput="render()">
+
 <div class="card">
 <input id="name" placeholder="ชื่อสินค้า">
 <input id="code" placeholder="รหัสสินค้า / บาร์โค้ด">
 <input id="price" type="number" placeholder="ราคา">
 <input id="exp" type="date">
-<select id="cat">
-<option>อาหาร</option>
-<option>เครื่องดื่ม</option>
-<option>อื่นๆ</option>
-</select>
+
+<input id="newCat" placeholder="เพิ่มหมวดหมู่ใหม่">
+<select id="cat"></select>
+
+<input type="file" accept="image/*" id="img">
+
+<button onclick="scan()">📷 สแกนบาร์โค้ด</button>
 <button onclick="add()">➕ เพิ่มสินค้า</button>
 </div>
 
@@ -33,29 +38,67 @@ small{color:red}
 
 <script>
 let items = JSON.parse(localStorage.getItem("stock")||"[]");
+let cats = JSON.parse(localStorage.getItem("cats")||'["อาหาร","เครื่องดื่ม"]');
 
-function save(){localStorage.setItem("stock",JSON.stringify(items))}
+function save(){
+localStorage.setItem("stock",JSON.stringify(items));
+localStorage.setItem("cats",JSON.stringify(cats));
+}
+
+function loadCats(){
+cat.innerHTML="";
+cats.forEach(c=>{
+cat.innerHTML+=`<option>${c}</option>`;
+});
+}
+
 function add(){
+if(newCat.value && !cats.includes(newCat.value)){
+cats.push(newCat.value);
+}
+let reader=new FileReader();
+reader.onload=()=>{
 items.push({
-n:name.value,c:code.value,p:price.value,e:exp.value,cat:cat.value
+n:name.value,
+c:code.value,
+p:price.value,
+e:exp.value,
+cat:cat.value,
+img:reader.result
 });
 save(); render();
+};
+if(img.files[0]) reader.readAsDataURL(img.files[0]);
+else reader.onload();
 }
+
 function render(){
 list.innerHTML="";
 let today=new Date().toISOString().slice(0,10);
-items.forEach(i=>{
+items.filter(i=>i.n.includes(search.value)||i.c.includes(search.value))
+.forEach(i=>{
 let warn=i.e && i.e<=today?"<small>⚠ ใกล้หมดอายุ</small>":"";
 list.innerHTML+=`<div class="card">
 <b>${i.n}</b><br>
-รหัส:${i.c}<br>
-ราคา:${i.p}<br>
-หมดอายุ:${i.e}<br>
-หมวด:${i.cat}<br>
+รหัส: ${i.c}<br>
+ราคา: ${i.p}<br>
+หมดอายุ: ${i.e}<br>
+หมวด: ${i.cat}<br>
 ${warn}
+${i.img?`<img src="${i.img}">`:""}
 </div>`;
 });
 }
+
+async function scan(){
+try{
+const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+alert("เปิดกล้องแล้ว กรุณาใช้แอปสแกนบาร์โค้ดของมือถือ\nแล้วคัดลอกรหัสมาวางในช่อง");
+stream.getTracks().forEach(t=>t.stop());
+}catch(e){alert("อุปกรณ์ไม่รองรับกล้อง")}
+}
+
+loadCats();
 render();
 </script>
 
