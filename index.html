@@ -1,1 +1,63 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>ระบบสต๊อคสินค้า</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:sans-serif;background:#f4f6f8;margin:0;padding:15px}
+h1{text-align:center}
+input,select,button{width:100%;padding:10px;margin:5px 0}
+.card{background:#fff;padding:10px;border-radius:8px;margin-top:10px}
+small{color:red}
+</style>
+</head>
+<body>
 
+<h1>📦 ระบบสต๊อคสินค้า</h1>
+
+<div class="card">
+<input id="name" placeholder="ชื่อสินค้า">
+<input id="code" placeholder="รหัสสินค้า / บาร์โค้ด">
+<input id="price" type="number" placeholder="ราคา">
+<input id="exp" type="date">
+<select id="cat">
+<option>อาหาร</option>
+<option>เครื่องดื่ม</option>
+<option>อื่นๆ</option>
+</select>
+<button onclick="add()">➕ เพิ่มสินค้า</button>
+</div>
+
+<div id="list"></div>
+
+<script>
+let items = JSON.parse(localStorage.getItem("stock")||"[]");
+
+function save(){localStorage.setItem("stock",JSON.stringify(items))}
+function add(){
+items.push({
+n:name.value,c:code.value,p:price.value,e:exp.value,cat:cat.value
+});
+save(); render();
+}
+function render(){
+list.innerHTML="";
+let today=new Date().toISOString().slice(0,10);
+items.forEach(i=>{
+let warn=i.e && i.e<=today?"<small>⚠ ใกล้หมดอายุ</small>":"";
+list.innerHTML+=`<div class="card">
+<b>${i.n}</b><br>
+รหัส:${i.c}<br>
+ราคา:${i.p}<br>
+หมดอายุ:${i.e}<br>
+หมวด:${i.cat}<br>
+${warn}
+</div>`;
+});
+}
+render();
+</script>
+
+</body>
+</html>
